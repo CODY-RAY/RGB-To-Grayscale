@@ -1,2 +1,2 @@
 # RGB-To-Grayscale
-110 line of Swift, that make images gray
+110 line of Code, that make images gray
