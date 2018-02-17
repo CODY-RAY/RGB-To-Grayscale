@@ -18,12 +18,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     let queue = DispatchQueue(label: "Com.Ray.Cody")
     var bytesPerPixel = 4
     @IBOutlet weak var imageView: UIImageView!
+    var colorImage:UIImage? = nil
+    var colorFlag = false
     var pipelineState: MTLComputePipelineState!
     var inTexture: MTLTexture!
     var outTexture: MTLTexture!
     var threadGroups = MTLSizeMake(1, 1, 1)
     let threadGroupSize = MTLSizeMake(16, 16, 1)
     
+    @IBOutlet weak var colorButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
         queue.async {self.setUp()}
@@ -40,11 +43,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.allowsEditing = true
+        
         picker.sourceType = UIImagePickerControllerSourceType.photoLibrary
         self.present(picker, animated: true)
         
     }
     @IBAction func rgbToGrayScale(_ sender: UIButton) { // Action for gpu grayscale
+        if colorFlag != true {
         if (imageView.image != nil) {
             texture(from: imageView.image!)
             threadGroups = MTLSizeMake(inTexture.width/threadGroupSize.width + 1, inTexture.height/threadGroupSize.height + 1, 1)
@@ -53,16 +58,25 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
                 let finalResult = self.image(from: self.outTexture)
                     DispatchQueue.main.async {
                         self.imageView.image = finalResult
+                        self.colorButton.setTitle("color", for: .normal)
+                        self.colorFlag = true
                     }
+            }}}else{
+            imageView.image = colorImage!
+            self.colorButton.setTitle("Grayscale", for: .normal)
+            colorFlag = false
             }
-        }
+        
     }
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {// Didn't pick pic
        picker.dismiss(animated: true)
     }
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {// Did pick pic
         if let image = info[UIImagePickerControllerEditedImage] as? UIImage
-        {imageView.image = image}
+        {
+            imageView.image = image
+            colorImage = image
+        }
         picker.dismiss(animated: true)
     }
     
